@@ -1,47 +1,3 @@
-"""
-Faça um algoritmo que utilize o menu abaixo:
-MENU
-======
-1- Ler arquivo de jogadores
-2- Escalar time
-3- Realizar Substiuição
-4- Expulsão
-5- Imprimir escalação
-Escolha: 
-Opção 1: Ler de um arquivo texto todos os jogadores
-        escalados para a copa e armazenar em uma
-        lista (lst_jogadores)
-        Cada Elemento da lista será uma instância
-            da classe Jogador.
-Opção 2: Você deverá escalar 11 dos jogadores para
-        iniciar a partida.
-        Os Jogadores escalados para a partida ficam
-            em uma lista (lst_escalados)
-            Alterar o atributo 'participou_partida'
-                para True
-        Os jogadores que não forem escalados para
-            iniciar a partida ficam em uma outra
-            lista (lst_reserva)
-Opção 3: Você poderá realizar a substituição de um
-        jogador por outro.
-        Quando isso acontecer o jogador vai para
-            a lista de Reserva e o outro para a
-            lista Escalados.
-Opção 4: Caso haja alguma expulsão, o jogador sai
-        da lista de Escalados e vai para a lista
-        Reserva.
-Opção 5: Mostrar a escalação de todos jogadores que
-        participaram do jogo, inclusive as substituições
-        e expulsões. 
-        Salve esses dados em um arquivo (todosjogadores.txt)
-class Jogador:
-    def __init__(self, nome, numero, posicao):
-        self.__numero = numero
-        self.__nome_jogador = nome
-        self.__posicao = posicao # GOLEIRO ou DEFESA ou MEIO-CAMPO ou ATECANTE
-        self.__situacao = "NORMAL"  # ou "EXPULSO"
-        self.__participou_partida = False # ou True
-"""
 class Jogador:
     def __init__(self, nome, numero, posicao):
         self.__numero = numero
@@ -64,6 +20,12 @@ class Jogador:
 
     def getParticipouPartida(self):
       return f'{self.__participou_partida}'
+    
+    
+def encontrarJogador(lista, numeroJogador):
+  for jogador in lista:
+    if jogador.getNumero() == numeroJogador:
+        return jogador
 
 
 lst_jogadores = []
@@ -74,31 +36,61 @@ message = "MENU \n 1- Ler arquivo de jogadores \n 2- Escalar time \n 3- Realizar
 def opcao1():
   with open("convocados.txt", "r",) as arquivo:
     jogadoresDoArquivo = arquivo.read().split("\n")
-    jogadoresDoArquivo.pop()
     for jogadorDoArquivo in jogadoresDoArquivo:
       itemDoJogador = jogadorDoArquivo.split(":")
       jogadorAtual = Jogador(itemDoJogador[1], itemDoJogador[0], itemDoJogador[2])
       lst_jogadores.append(jogadorAtual)
+      print(f'Jogador {itemDoJogador[1]} escalado!')
+    
+    print('Todos os Jogadores foram escalados!')
 
 def opcao2():
-  print("----- LISTA DE JOGADORES QUE PODEM SER ESCALADOS -----")
-  for jogadorParaEscalar in lst_jogadores:
-    print(f'Número: {jogadorParaEscalar.getNumero()} | Nome: {jogadorParaEscalar.getNomeJogador()} | Posição: {jogadorParaEscalar.getPosicao()}')
-
-  print("----- Você deve escalar 11 jogadores -----")
-  while lst_escalados.__len__() <= 11:
+  while lst_escalados.__len__() <= 3:
     numeroJogador = input("Digite o número do jogador que será escalado: ")
-    for jogadorParaEscalar in lst_jogadores:
-      if jogadorParaEscalar.getNumero() == numeroJogador:
-        lst_escalados.append(jogadorParaEscalar)
-        print(f'Jogador {jogadorParaEscalar.getNomeJogador()} escalado!')
-
+    jogadorExiste = encontrarJogador(lst_escalados, numeroJogador)
+    
+    if jogadorExiste != None:
+      print(f'Jogador {jogadorExiste.getNomeJogador()} já está escalado...')
+    else:
+      jogadorParaEscalar = encontrarJogador(lst_jogadores, numeroJogador)
+      jogadorParaEscalar.participou_partida = True
+      lst_escalados.append(jogadorParaEscalar)
+      print(f'Jogador {jogadorParaEscalar.getNomeJogador()} escalado!')
+  
+  for jogador in lst_jogadores:
+    jogadorEstaEscalado = encontrarJogador(lst_escalados, jogador.getNumero())
+    if jogadorEstaEscalado == None:
+      lst_reserva.append(jogador)
+      
+def removerJogador(lista, numeroJogador):
+    for index, jogador in enumerate(lista):
+      if jogador.getNumero() == numeroJogador:
+        lista.pop(index)
+        
+def adicionarJogador(lista, numeroJogador):
+  for jogador in lst_jogadores:
+    if jogador.getNumero() == numeroJogador:
+      lista.append(jogador)
+      return jogador
 
 def opcao3():
-  print('print R')
+  numeroJogadorQueSai = input('Digite o número do jogador que irá sair: ')
+  numeroJogadorQueEntra = input('Digite o número do jogador que irá entrar: ')
+  
+  removerJogador(lst_escalados, numeroJogadorQueSai)
+  removerJogador(lst_reserva, numeroJogadorQueEntra)
+  
+  jogadorQueEntrou = adicionarJogador(lst_escalados, numeroJogadorQueEntra)
+  jogadorQueSaiu = adicionarJogador(lst_reserva, numeroJogadorQueSai)
+  
+  print(f'Substituição feita! \n Sai: {jogadorQueSaiu.getNomeJogador()} ↓ \n Entra: {jogadorQueEntrou.getNomeJogador()} ↑')
 
 def opcao4():
-  print('print R')
+  numeroJogadorExpulso = input('Digite o número do jogador expulso: ')
+  removerJogador(lst_escalados, numeroJogadorExpulso)
+  
+  jogadorExpulso = adicionarJogador(lst_reserva, numeroJogadorExpulso)
+  print(f'o Jogador expulso foi o {jogadorExpulso.getNomeJogador()} e ele já está no banco de reservas')
 
 def opcao5():
   print('print R')
@@ -110,8 +102,10 @@ def init():
       opcao1()
     elif resposta == "2":
       opcao2()
-
-
+    elif resposta == "3":
+      opcao3()
+    elif resposta == "4":
+      opcao4()
 
 while True:
   init()
